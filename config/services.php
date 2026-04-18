@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'ai' => [
+        'title_generator_model' => env('AI_TITLE_GENERATOR_MODEL', 'google/gemini-3.1-flash-lite-preview'),
+        'titles_per_category_min' => (int) env('AI_TITLES_PER_CATEGORY_MIN', 10),
+        'titles_per_category_max' => (int) env('AI_TITLES_PER_CATEGORY_MAX', 20),
+    ],
 ];
