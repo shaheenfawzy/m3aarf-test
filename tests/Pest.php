@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -14,9 +16,8 @@ use Tests\TestCase;
 |
 */
 
-pest()->extend(TestCase::class)
- // ->use(RefreshDatabase::class)
-    ->in('Feature');
+pest()->extend(TestCase::class)->in('Feature', 'Unit');
+pest()->use(RefreshDatabase::class)->in('Feature', 'Unit/Services/CourseDiscoveryServiceTest.php');
 
 /*
 |--------------------------------------------------------------------------
@@ -44,7 +45,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function something(): void
 {
     // ..
 }

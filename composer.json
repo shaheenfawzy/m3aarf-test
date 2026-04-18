@@ -10,15 +10,18 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "alaouy/youtube": "^2.2",
         "laravel/ai": "^0.6.0",
         "laravel/framework": "^13.0",
         "laravel/prompts": "^0.3.16",
         "laravel/tinker": "^3.0"
     },
     "require-dev": {
+        "driftingly/rector-laravel": "^2.3",
         "fakerphp/faker": "^1.23",
+        "larastan/larastan": "^3.0",
         "laravel/pail": "^1.2.5",
-        "laravel/pint": "^1.27",
+        "laravel/pint": "^1.29",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "pestphp/pest": "^4.6",
@@ -52,6 +55,28 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "ci": [
+            "@check",
+            "@test"
+        ],
+        "check": [
+            "@php vendor/bin/pint --test",
+            "@php -d xdebug.mode=off vendor/bin/rector process --dry-run",
+            "@php vendor/bin/phpstan analyse --memory-limit=2G"
+        ],
+        "fix": [
+            "@php -d xdebug.mode=off vendor/bin/rector process",
+            "@php vendor/bin/pint"
+        ],
+        "stan": [
+            "@php vendor/bin/phpstan analyse --memory-limit=2G"
+        ],
+        "rector": [
+            "@php vendor/bin/rector process"
+        ],
+        "pint": [
+            "@php vendor/bin/pint"
         ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
