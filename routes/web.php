@@ -2,10 +2,13 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\CoursesController;
 use App\Http\Controllers\DiscoverCoursesController;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'home')->name('home');
+
+Route::get('/courses', [CoursesController::class, 'index'])->name('courses.index');
 
 Route::post('/courses/discover', DiscoverCoursesController::class)
     ->middleware('throttle:5,1')
