@@ -16,5 +16,7 @@
     <x-site-header />
 
     @yield('content')
+
+    <x-scroll-top />
 </body>
 </html>
