@@ -17,7 +17,6 @@ Three commands, then add two API keys:
 ```bash
 git clone git@github.com:shaheenfawzy/m3aarf-test.git && cd m3aarf-test
 composer setup
-npm run build
 php artisan serve
 ```
 
