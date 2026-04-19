@@ -1,58 +1,88 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# YouTube Course Scraper
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A Laravel 13 application that turns a list of categories into curated YouTube playlists. Categories go in, the AI generates relevant playlist queries, the YouTube Data API enriches each result with stats, and the frontend renders cards with category tabs, pagination, and shareable URL state.
 
-## About Laravel
+## Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- **Backend** — Laravel 13, PHP 8.4, SQLite (default)
+- **AI** — official [`laravel/ai`](https://github.com/laravel/ai) SDK over OpenRouter (default model: `google/gemini-3.1-flash-lite-preview`)
+- **YouTube** — Data API v3 (search, playlistItems, videos) via custom service with `Http::pool`
+- **Frontend** — Alpine.js 3, Bootstrap 5.3, `postcss-rtlcss`, PurgeCSS
+- **Tooling** — Pest 4, PHPStan + Larastan (level max), Pint, Rector
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Setup
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
-
-## Learning Laravel
-
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+Three commands, then add two API keys:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+git clone git@github.com:shaheenfawzy/m3aarf-test.git && cd m3aarf-test
+composer setup
+npm run build
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+### Required `.env` keys
 
-## Contributing
+```dotenv
+YOUTUBE_API_KEY=your-google-cloud-key
+OPENROUTER_API_KEY=your-openrouter-key
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+I used OpenRouter as the provider. To swap to any other lab supported by `laravel/ai`, set `AI_DEFAULT_PROVIDER` and supply the matching `{LAB}_API_KEY` (e.g. `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`), then point `AI_TITLE_GENERATOR_MODEL` at a model that lab serves:
 
-## Code of Conduct
+```dotenv
+AI_DEFAULT_PROVIDER=openrouter
+AI_TITLE_GENERATOR_MODEL=google/gemini-3.1-flash-lite-preview
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+## Endpoints
 
-## Security Vulnerabilities
+| Method | Path                | Purpose                                                 |
+|--------|---------------------|---------------------------------------------------------|
+| `GET`  | `/`                 | SPA shell (hydrates from URL)                           |
+| `POST` | `/courses/discover` | Generate AI titles, search YouTube, persist results     |
+| `GET`  | `/courses`          | Read persisted courses, filter by category, eager-load |
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+`POST /courses/discover` is throttled to **5 req/min** per IP to protect the YouTube quota.
+
+## Decisions
+
+### `Http::pool` for YouTube API fan-out
+The discover flow hits YouTube three times per category and once more per playlist batch. Done sequentially that's seconds of wall time per request, mostly waiting on TLS handshakes. `Http::pool` runs the calls concurrently inside one Guzzle pool — measured ~3× faster than serial for typical 5-category requests. Pool failures are caught per-response so one bad query doesn't poison the batch.
+
+### Custom YoutubeService instead of `alaouy/youtube`
+Existing community packages wrap individual endpoints but don't expose `Http::pool`. Since concurrency was the whole point, a thin custom client was simpler than monkey-patching a package. The service is also easier to mock in tests (`Http::fake` works directly, no package internals to stub).
+
+### Official `laravel/ai` SDK over vendor-specific SDKs
+Vendor-specific SDKs lock you in. The official `laravel/ai` package exposes a unified provider abstraction with **structured output via JSON schema** and an **agent pattern** — `YoutubeTitleGenerator` declares its output schema and gets back validated PHP objects, no parsing or retries on bad JSON. Switching from OpenRouter → OpenAI → Anthropic is a config flip, not a rewrite.
+
+### Alpine.js over vanilla / over Vue/React
+The page has reactive state (tags, filters, pagination, URL sync) but no routing or component tree to justify a SPA framework. Alpine gives declarative reactivity (`x-show`, `x-for`, `x-transition`) directly in Blade with zero build complexity beyond what Vite already does for the SCSS. ~15 KB gzipped vs Vue's ~35 KB or React's ~45 KB, and the markup stays server-rendered and crawlable.
+
+### Bootstrap via npm + PurgeCSS
+The CDN build was the first iteration — easy but ships ~230 KB of unused CSS. Migrating to npm and running **PurgeCSS in production** (scanning `.blade.php` + `.js` for actually-referenced classes) drops the final CSS to around a quarter of the CDN size.
+
+### `postcss-rtlcss` in `override` mode
+Rather than maintaining two stylesheets or littering Blade with `me-*`/`ms-*` swaps, source SCSS is written once in LTR and PostCSS rewrites directional properties at build time. `override` mode (vs `combined`) skips the `[dir=ltr]` selectors entirely since the app is RTL-only — smaller output.
+
+### URL-as-state with `URLSearchParams` + `history.replaceState`
+`?categories=php,laravel&category_id=3&page=2` lives in the address bar. Refresh restores the view, links are shareable, browser back/forward Just Works. `replaceState` (not `pushState`) avoids polluting history with every tag toggle. Hydration runs in `init()` *before* the first fetch.
+
+### YoutubeService caching layer
+Search results are cached by query (`Cache::remember`) so identical category lookups inside the same window skip the network entirely. The pool path mixes cache hits and misses transparently — only misses go into the actual HTTP pool. Covered by `it searches many queries in one pool, mixing cache hits and misses`.
+
+### Idempotent persistence via `updateOrCreate(playlist_id)`
+Re-running discover with the same categories doesn't duplicate rows; it refreshes stats. `playlist_id` is the natural key from YouTube. Tested by `it is idempotent across repeat calls`.
+
+---
+
+## Quality
+
+```bash
+composer check
+composer fix
+```
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+MIT.
