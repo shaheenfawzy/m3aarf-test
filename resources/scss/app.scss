@@ -29,6 +29,87 @@ $primary-bg-subtle: #fce7e5;
 $bootstrap-icons-font-dir: "bootstrap-icons/font/fonts";
 @import "bootstrap-icons/font/bootstrap-icons.scss";
 
+.category-input {
+    position: relative;
+    min-height: 58px;
+    cursor: text;
+    padding: 0.6rem 2.5rem 0.6rem 0.85rem;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.category-input-field {
+    line-height: 1.4;
+}
+
+.category-input:focus-within {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.15);
+}
+
+.category-input-field {
+    border: 0;
+    outline: 0;
+    background: transparent;
+    padding: 0.25rem 0;
+    font-size: 0.95rem;
+    min-width: 60px;
+    width: auto;
+}
+
+.category-chip {
+    background: var(--bs-primary-bg-subtle);
+    color: var(--bs-primary);
+    font-weight: 600;
+    font-size: 0.85rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 999px;
+    line-height: 1;
+}
+
+.btn-chip-remove {
+    border: 0;
+    background: transparent;
+    color: var(--bs-primary);
+    padding: 0;
+    line-height: 1;
+    display: inline-flex;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.btn-chip-remove:hover {
+    color: #8a2c25;
+}
+
+.category-chip-selected {
+    background: var(--bs-primary) !important;
+    color: #fff !important;
+}
+
+.category-chip-selected .btn-chip-remove {
+    color: #fff;
+}
+
+.btn-clear-all {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.85rem;
+    border: 0;
+    background: transparent;
+    color: #adb5bd;
+    padding: 0;
+    line-height: 1;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.btn-clear-all:hover {
+    color: var(--bs-primary);
+}
+
 [x-cloak] {
     display: none !important;
 }

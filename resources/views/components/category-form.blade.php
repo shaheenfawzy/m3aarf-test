@@ -1,16 +1,17 @@
 <div class="card border-0 shadow-sm">
     <div class="card-body p-4 p-md-5">
         <label class="form-label fw-semibold mb-2">
-            أدخل التصنيفات (مفصولة بفواصل)
+            أدخل التصنيفات
         </label>
-        <textarea class="form-control mb-3" rows="3"
-            placeholder="مثال: لارافيل, فيو, تايلويند"
-            x-model="rawCategories"></textarea>
+        <x-category-input />
+        <small class="form-text text-muted mt-2 d-block">
+            اكتب تصنيفاً ثم اضغط Enter أو فاصلة لإضافته
+        </small>
 
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 mt-4">
             <button type="button" class="btn btn-primary btn-lg"
                 @click="submit()"
-                :disabled="loading || rawCategories.trim().length === 0">
+                :disabled="loading || formTags.length === 0">
                 <i class="bi bi-play-fill ms-1"></i>
                 <span x-text="loading ? 'جارٍ الجمع...' : 'ابدأ الجمع'"></span>
             </button>

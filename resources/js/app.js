@@ -3,18 +3,80 @@ import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 
 Alpine.data('coursesPage', () => ({
-    rawCategories: '',
+    formTags: [],
+    formDraft: '',
+    formSelectAll: false,
     loading: false,
     error: null,
     success: false,
 
-    async submit() {
-        const categories = this.rawCategories
-            .split(',')
-            .map((value) => value.trim())
-            .filter(Boolean);
+    handleTagKey(event) {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'a' && this.formDraft === '' && this.formTags.length) {
+            event.preventDefault();
+            this.formSelectAll = true;
+            return;
+        }
 
-        if (! categories.length) return;
+        if (event.key === 'Backspace' && this.formSelectAll) {
+            event.preventDefault();
+            this.clearTags();
+            return;
+        }
+
+        if (this.formSelectAll && event.key !== 'Meta' && event.key !== 'Control') {
+            this.formSelectAll = false;
+        }
+
+        if (['Enter', ','].includes(event.key)) {
+            event.preventDefault();
+            this.commitDraft();
+            return;
+        }
+
+        if (event.key === 'Backspace' && this.formDraft === '') {
+            this.formTags.pop();
+        }
+    },
+
+    commitDraft() {
+        const value = this.formDraft.trim();
+
+        this.formDraft = '';
+
+        if (! value) return;
+        if (this.formTags.includes(value)) return;
+
+        this.formTags.push(value);
+    },
+
+    removeTag(index) {
+        this.formTags.splice(index, 1);
+    },
+
+    clearTags() {
+        this.formTags = [];
+        this.formDraft = '';
+        this.formSelectAll = false;
+    },
+
+    pasteTags(event) {
+        const text = event.clipboardData?.getData('text') ?? '';
+
+        if (! /[,\n\r]/.test(text)) return;
+
+        event.preventDefault();
+
+        text.split(/[,\n\r]+/).forEach((part) => {
+            const value = part.trim();
+
+            if (value && ! this.formTags.includes(value)) this.formTags.push(value);
+        });
+    },
+
+    async submit() {
+        this.commitDraft();
+
+        if (! this.formTags.length) return;
 
         this.loading = true;
         this.error = null;
@@ -28,7 +90,7 @@ Alpine.data('coursesPage', () => ({
                     Accept: 'application/json',
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content ?? '',
                 },
-                body: JSON.stringify({ categories }),
+                body: JSON.stringify({ categories: [...this.formTags] }),
             });
 
             if (! response.ok) {
