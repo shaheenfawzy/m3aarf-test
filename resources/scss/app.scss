@@ -23,11 +23,51 @@ $primary-bg-subtle: #fce7e5;
 @import "bootstrap/scss/buttons";
 @import "bootstrap/scss/card";
 @import "bootstrap/scss/badge";
+@import "bootstrap/scss/pagination";
 @import "bootstrap/scss/helpers";
 @import "bootstrap/scss/utilities/api";
 
 $bootstrap-icons-font-dir: "bootstrap-icons/font/fonts";
 @import "bootstrap-icons/font/bootstrap-icons.scss";
+
+.thumb {
+    aspect-ratio: 16 / 10;
+    background: linear-gradient(135deg, #2a3552, #142037);
+}
+
+.course-card {
+    cursor: pointer;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.12);
+}
+
+.pagination-pill {
+    --bs-pagination-color: var(--bs-primary);
+    --bs-pagination-hover-color: var(--bs-primary);
+    --bs-pagination-hover-bg: var(--bs-primary-bg-subtle);
+    --bs-pagination-hover-border-color: var(--bs-primary-bg-subtle);
+    --bs-pagination-focus-color: var(--bs-primary);
+    --bs-pagination-focus-bg: var(--bs-primary-bg-subtle);
+    --bs-pagination-focus-box-shadow: 0 0 0 0.2rem rgba(var(--bs-primary-rgb), 0.25);
+    --bs-pagination-active-bg: var(--bs-primary);
+    --bs-pagination-active-border-color: var(--bs-primary);
+}
+
+.pagination-pill .page-link {
+    border-radius: 8px;
+    min-width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
 
 .category-input {
     position: relative;
